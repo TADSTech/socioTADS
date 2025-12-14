@@ -31,14 +31,14 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-        run: python poster.py
+        run: python api/poster.py
 
       - name: Commit Status Update
         # Only run if the script actually posted something (creates a .posted flag file)
         if: hashFiles('.posted_flag') != ''
         run: |
-          git config --global user.name "X-Scheduler-Bot"
-          git config --global user.email "bot@github.com"
+          git config --global user.name "Michael Tunwashe"
+          git config --global user.email "motrenewed@gmail.com"
           git add .github/json/content.json
-          git commit -m "🤖 Auto-update: Marked posts as published"
+          git commit -m "Auto-update: Marked posts as published"
           git push

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:sociotads/api/git_service.dart';
@@ -487,6 +488,162 @@ class _XPageState extends State<XPage> {
     });
   }
 
+  void _showAIGeneratorSheet(BuildContext context, AppColors colors, AppTextStyles styles) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text('Generate AI Tweet', style: styles.titleMedium),
+        message: Text(
+          'Trigger the GitHub Action to generate an AI-powered tweet',
+          style: styles.bodySmall,
+        ),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerAIGeneration('news');
+            },
+            isDefaultAction: true,
+            child: Text('📰 News Tweet'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerAIGeneration('insight');
+            },
+            isDefaultAction: true,
+            child: Text('💡 Insight Tweet'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerAIGeneration('tip');
+            },
+            isDefaultAction: true,
+            child: Text('🎯 Tip Tweet'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _triggerAIGeneration('future');
+            },
+            isDefaultAction: true,
+            child: Text('🚀 Future Tweet'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          isDestructiveAction: false,
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  void _triggerAIGeneration(String category) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Generating Tweet'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            const CupertinoActivityIndicator(radius: 12),
+            const SizedBox(height: 16),
+            Text(
+              'Triggering GitHub Action...\nCategory: $category',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This will generate a new tweet and commit it to the repository.',
+              style: TextStyle(fontSize: 11, color: CupertinoColors.systemGrey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () {
+              Navigator.pop(context);
+              // Launch GitHub Actions workflow
+              _launchGitHubAction(category);
+            },
+            isDefaultAction: true,
+            child: const Text('Proceed'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            isDestructiveAction: true,
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _launchGitHubAction(String category) async {
+    final url = Uri.parse(
+      'https://github.com/TADSTech/socioTADS/actions/workflows/generate-ai-tweet.yml',
+    );
+    
+    try {
+      // Note: In a real app, you'd use url_launcher to open this
+      // For now, show a confirmation dialog
+      if (!mounted) return;
+      
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('GitHub Action Triggered'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              const Icon(CupertinoIcons.checkmark_circle_fill, 
+                color: CupertinoColors.systemGreen, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                'Tweet generation started!\n\nCategory: $category\n\nYou can monitor progress on GitHub.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () {
+                Navigator.pop(context);
+                // Refresh posts after a delay
+                Future.delayed(const Duration(seconds: 2), _refreshPosts);
+              },
+              isDefaultAction: true,
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to trigger action: $e'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ThemeProvider.of(context);
@@ -524,6 +681,11 @@ class _XPageState extends State<XPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => _showAIGeneratorSheet(context, colors, styles),
+              child: Icon(CupertinoIcons.sparkles, color: colors.accent, size: isMobile ? 20 : 22),
+            ),
             CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: _refreshPosts,

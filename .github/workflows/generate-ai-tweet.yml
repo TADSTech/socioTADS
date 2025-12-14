@@ -1,0 +1,68 @@
+name: Generate AI Tweet
+
+on:
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Tweet Category'
+        required: true
+        default: 'news'
+        type: choice
+        options:
+          - news
+          - insight
+          - tip
+          - future
+      schedule_hours:
+        description: 'Schedule hours from now'
+        required: false
+        default: '2'
+        type: string
+      char_limit:
+        description: 'Character limit for tweet'
+        required: false
+        default: '200'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate_tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install google-genai python-dotenv
+
+      - name: Generate AI Tweet
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -c "
+from api.ai import injectJsonData
+category = '${{ github.event.inputs.category }}'
+schedule_hours = int('${{ github.event.inputs.schedule_hours }}' or '2')
+char_limit = int('${{ github.event.inputs.char_limit }}' or '200')
+injectJsonData(category=category, schedule_hours=schedule_hours, char_limit=char_limit)
+          "
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name "Michael Tunwashe"
+          git config --global user.email "motrenewed@gmail.com"
+          if git diff --quiet HEAD .github/json/content.json; then
+            echo "No changes to commit"
+          else
+            git add .github/json/content.json
+            git commit -m "Main: Generated new tweet (Category: ${{ github.event.inputs.category }})" || true
+            git push
+          fi

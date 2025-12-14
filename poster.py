@@ -53,7 +53,12 @@ def process_queue():
         if post.get('posted', False):
             continue
 
-        post_time = datetime.strptime(post['time'], "%Y-%m-%dT%H:%M:%S")
+        # Handle ISO 8601 format with optional milliseconds
+        time_str = post['time']
+        # Remove milliseconds if present (e.g., .000)
+        if '.' in time_str:
+            time_str = time_str.split('.')[0]
+        post_time = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
         
         if post_time <= now:
             print(f" Time to post: {post['id']}")

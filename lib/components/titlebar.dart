@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:sociotads/theme/app_theme.dart';
+import 'package:sociotads/utils/responsive.dart';
+
+// Conditional import for bitsdojo_window
+import 'titlebar_desktop.dart' if (dart.library.html) 'titlebar_web.dart' as platform;
 
 class CustomTitleBar extends StatelessWidget {
   const CustomTitleBar({super.key});
@@ -11,119 +14,79 @@ class CustomTitleBar extends StatelessWidget {
     final colors = theme.colors;
     final styles = AppTextStyles(colors);
 
+    // On web, show a simpler header bar
+    if (Responsive.isWeb) {
+      return _WebTitleBar(colors: colors, styles: styles);
+    }
+
+    // On desktop, use the platform-specific titlebar
+    return platform.DesktopTitleBar(colors: colors, styles: styles);
+  }
+}
+
+/// Simple title bar for web - no window controls needed
+class _WebTitleBar extends StatelessWidget {
+  final AppColors colors;
+  final AppTextStyles styles;
+
+  const _WebTitleBar({required this.colors, required this.styles});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobileScreen(context);
+
     return Container(
-      height: 36,
+      height: isMobile ? 48 : 36,
       color: colors.surface,
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16),
       child: Row(
         children: [
-          Expanded(
-            child: MoveWindow(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        width: 24,
-                        height: 24,
-                        fit: BoxFit.cover,
-                      ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.asset(
+              'assets/logo.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: colors.accent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Center(
+                  child: Text(
+                    'S',
+                    style: TextStyle(
+                      color: CupertinoColors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'SocioTADS',
-                      style: styles.titleMedium,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-          WindowButtons(colors: colors),
-        ],
-      ),
-    );
-  }
-}
-
-class WindowButtons extends StatelessWidget {
-  final AppColors colors;
-
-  const WindowButtons({super.key, required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _WindowButton(
-          icon: CupertinoIcons.minus,
-          onPressed: () => appWindow.minimize(),
-          colors: colors,
-          hoverColor: colors.surfaceSecondary,
-        ),
-        _WindowButton(
-          icon: CupertinoIcons.square,
-          onPressed: () => appWindow.maximizeOrRestore(),
-          colors: colors,
-          hoverColor: colors.surfaceSecondary,
-        ),
-        _WindowButton(
-          icon: CupertinoIcons.xmark,
-          onPressed: () => appWindow.close(),
-          colors: colors,
-          hoverColor: const Color(0xFFE81123),
-          isClose: true,
-        ),
-      ],
-    );
-  }
-}
-
-class _WindowButton extends StatefulWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final AppColors colors;
-  final Color hoverColor;
-  final bool isClose;
-
-  const _WindowButton({
-    required this.icon,
-    required this.onPressed,
-    required this.colors,
-    required this.hoverColor,
-    this.isClose = false,
-  });
-
-  @override
-  State<_WindowButton> createState() => _WindowButtonState();
-}
-
-class _WindowButtonState extends State<_WindowButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: Container(
-          width: 46,
-          height: 36,
-          color: _isHovered ? widget.hoverColor : widget.colors.surface,
-          child: Center(
+          const SizedBox(width: 10),
+          Text(
+            'SocioTADS',
+            style: styles.titleMedium,
+          ),
+          const Spacer(),
+          // Optional: Add theme toggle button on web
+          CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              // Theme toggle handled by ThemeSelectorSheet in main
+            },
             child: Icon(
-              widget.icon,
-              size: 14,
-              color: _isHovered && widget.isClose
-                  ? CupertinoColors.white
-                  : widget.colors.textPrimary,
+              CupertinoIcons.paintbrush,
+              size: 18,
+              color: colors.textMuted,
             ),
           ),
-        ),
+        ],
       ),
     );
   }

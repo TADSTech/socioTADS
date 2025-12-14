@@ -1,11 +1,15 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:sociotads/api/git_service.dart';
 import 'package:sociotads/theme/app_theme.dart';
 import 'package:sociotads/components/titlebar.dart';
+import 'package:sociotads/components/lock_screen.dart';
+import 'package:sociotads/utils/responsive.dart';
+
+// Conditional imports for platform-specific code
+import 'main_desktop.dart' if (dart.library.html) 'main_web.dart' as platform;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,15 +17,8 @@ void main() async {
   
   runApp(const MyApp());
   
-  doWhenWindowReady(() {
-    final win = appWindow;
-    const initialSize = Size(1100, 750);
-    win.minSize = const Size(800, 600);
-    win.size = initialSize;
-    win.alignment = Alignment.center;
-    win.title = "SocioTADS";
-    win.show();
-  });
+  // Initialize desktop window if on desktop platform
+  platform.initializeWindow();
 }
 
 
@@ -69,7 +66,9 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        home: const LandingPage(),
+        home: const LockScreen(
+          child: LandingPage(),
+        ),
         builder: (context, child) {
           return Column(
             children: [
@@ -91,197 +90,223 @@ class LandingPage extends StatelessWidget {
     final theme = ThemeProvider.of(context);
     final colors = theme.colors;
     final styles = AppTextStyles(colors);
+    final isMobile = Responsive.isMobileScreen(context);
+    final padding = Responsive.padding(context);
 
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 100,
+          padding: padding,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Responsive.maxContentWidth(context),
+                minHeight: MediaQuery.of(context).size.height - 100,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: isMobile ? 60 : 80,
+                    height: isMobile ? 60 : 80,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
+                      border: Border.all(color: colors.border, width: 1),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          CupertinoIcons.chart_bar_alt_fill,
+                          size: isMobile ? 30 : 40,
+                          color: colors.accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: isMobile ? 16 : 24),
+                  Text(
+                    'SocioTADS', 
+                    style: isMobile 
+                        ? styles.headlineLarge 
+                        : styles.displayLarge,
+                  ),
+                  SizedBox(height: isMobile ? 8 : 12),
+                  Text(
+                    'Monitor & schedule your social posts\nwith a beautiful, minimal interface',
+                    style: styles.bodyLarge.copyWith(color: colors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: isMobile ? 32 : 48),
+                  Container(
+                    padding: EdgeInsets.all(isMobile ? 16 : 20),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: colors.border, width: 1),
+                    ),
+                    child: Column(
+                      children: [
+                        _FeatureRow(
+                          icon: CupertinoIcons.graph_circle,
+                          title: 'Analytics',
+                          subtitle: 'Track post performance',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Container(height: 1, color: colors.border),
+                        ),
+                        _FeatureRow(
+                          icon: CupertinoIcons.clock,
+                          title: 'Scheduling',
+                          subtitle: 'Plan posts ahead of time',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Container(height: 1, color: colors.border),
+                        ),
+                        _FeatureRow(
+                          icon: CupertinoIcons.layers,
+                          title: 'Multi-platform',
+                          subtitle: 'Manage all socials in one place',
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: isMobile ? 32 : 48),
+                  Text('AVAILABLE PLATFORMS', style: styles.caption),
+                  SizedBox(height: isMobile ? 12 : 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoButton(
+                      color: colors.surface,
+                      padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16),
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          CupertinoPageRoute(
+                            builder: (context) => const XPage(),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colors.textPrimary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '𝕏',
+                              style: TextStyle(
+                                fontSize: isMobile ? 14 : 16,
+                                fontWeight: FontWeight.bold,
+                                color: colors.background,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'X (Twitter)',
+                            style: styles.titleMedium,
+                          ),
+                          const Spacer(),
+                          Icon(CupertinoIcons.chevron_right, color: colors.textMuted, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(CupertinoIcons.add, color: colors.textMuted, size: 20),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            'More platforms coming soon',
+                            style: styles.bodyMedium.copyWith(color: colors.textMuted),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: isMobile ? 24 : 32),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      showCupertinoModalPopup(
+                        context: context,
+                        builder: (context) => const ThemeSelectorSheet(),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(CupertinoIcons.paintbrush, color: colors.textMuted, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Change Theme', style: styles.bodySmall),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: colors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: colors.border, width: 1),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.chart_bar_alt_fill,
-                    size: 40,
-                    color: colors.accent,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('SocioTADS', style: styles.displayLarge),
-                const SizedBox(height: 12),
-                Text(
-                'Monitor & schedule your social posts\nwith a beautiful, minimal interface',
-                style: styles.bodyLarge.copyWith(color: colors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.border, width: 1),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.graph_circle, color: colors.accent, size: 24),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Analytics', style: styles.titleMedium),
-                              Text('Track post performance', style: styles.bodySmall),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Container(height: 1, color: colors.border),
-                    ),
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.clock, color: colors.accent, size: 24),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Scheduling', style: styles.titleMedium),
-                              Text('Plan posts ahead of time', style: styles.bodySmall),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Container(height: 1, color: colors.border),
-                    ),
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.layers, color: colors.accent, size: 24),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Multi-platform', style: styles.titleMedium),
-                              Text('Manage all socials in one place', style: styles.bodySmall),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 48),
-              Text('AVAILABLE PLATFORMS', style: styles.caption),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: CupertinoButton(
-                  color: colors.surface,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  borderRadius: BorderRadius.circular(12),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      CupertinoPageRoute(
-                        builder: (context) => const XPage(),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colors.textPrimary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '𝕏',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: colors.background,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'X (Twitter)',
-                        style: styles.titleMedium,
-                      ),
-                      const Spacer(),
-                      Icon(CupertinoIcons.chevron_right, color: colors.textMuted, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: colors.surfaceSecondary,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.border, width: 1),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(CupertinoIcons.add, color: colors.textMuted, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      'More platforms coming soon',
-                      style: styles.bodyMedium.copyWith(color: colors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  showCupertinoModalPopup(
-                    context: context,
-                    builder: (context) => const ThemeSelectorSheet(),
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(CupertinoIcons.paintbrush, color: colors.textMuted, size: 18),
-                    const SizedBox(width: 8),
-                    Text('Change Theme', style: styles.bodySmall),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Helper widget for feature rows in landing page
+class _FeatureRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _FeatureRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
+    return Row(
+      children: [
+        Icon(icon, color: colors.accent, size: 24),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: styles.titleMedium),
+              Text(subtitle, style: styles.bodySmall),
             ],
           ),
         ),
-        ),
-      ),
+      ],
     );
   }
 }
@@ -455,6 +480,7 @@ class _XPageState extends State<XPage> {
     final theme = ThemeProvider.of(context);
     final colors = theme.colors;
     final styles = AppTextStyles(colors);
+    final isMobile = Responsive.isMobileScreen(context);
 
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
@@ -489,7 +515,7 @@ class _XPageState extends State<XPage> {
             CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: _refreshPosts,
-              child: Icon(CupertinoIcons.refresh, color: colors.textSecondary, size: 22),
+              child: Icon(CupertinoIcons.refresh, color: colors.textSecondary, size: isMobile ? 20 : 22),
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
@@ -500,7 +526,7 @@ class _XPageState extends State<XPage> {
                   ),
                 );
               },
-              child: Icon(CupertinoIcons.plus_circle_fill, color: colors.accent, size: 28),
+              child: Icon(CupertinoIcons.plus_circle_fill, color: colors.accent, size: isMobile ? 24 : 28),
             ),
           ],
         ),
@@ -508,34 +534,40 @@ class _XPageState extends State<XPage> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 12 : 16, 
+              vertical: isMobile ? 8 : 12,
+            ),
             decoration: BoxDecoration(
               color: colors.surface,
               border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
             ),
-            child: Row(
-              children: [
-                _TabButton(
-                  label: 'All',
-                  icon: CupertinoIcons.list_bullet,
-                  isSelected: _selectedTab == 0,
-                  onTap: () => setState(() => _selectedTab = 0),
-                ),
-                const SizedBox(width: 12),
-                _TabButton(
-                  label: 'Scheduled',
-                  icon: CupertinoIcons.clock,
-                  isSelected: _selectedTab == 1,
-                  onTap: () => setState(() => _selectedTab = 1),
-                ),
-                const SizedBox(width: 12),
-                _TabButton(
-                  label: 'Posted',
-                  icon: CupertinoIcons.checkmark_circle,
-                  isSelected: _selectedTab == 2,
-                  onTap: () => setState(() => _selectedTab = 2),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _TabButton(
+                    label: 'All',
+                    icon: CupertinoIcons.list_bullet,
+                    isSelected: _selectedTab == 0,
+                    onTap: () => setState(() => _selectedTab = 0),
+                  ),
+                  SizedBox(width: isMobile ? 8 : 12),
+                  _TabButton(
+                    label: 'Scheduled',
+                    icon: CupertinoIcons.clock,
+                    isSelected: _selectedTab == 1,
+                    onTap: () => setState(() => _selectedTab = 1),
+                  ),
+                  SizedBox(width: isMobile ? 8 : 12),
+                  _TabButton(
+                    label: 'Posted',
+                    icon: CupertinoIcons.checkmark_circle,
+                    isSelected: _selectedTab == 2,
+                    onTap: () => setState(() => _selectedTab = 2),
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
@@ -592,41 +624,56 @@ class _XPageState extends State<XPage> {
 
                 if (posts.isEmpty) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(CupertinoIcons.doc_text, color: colors.textMuted, size: 48),
-                        const SizedBox(height: 16),
-                        Text('No posts yet', style: styles.titleMedium),
-                        const SizedBox(height: 8),
-                        Text('Create your first post to get started', style: styles.bodySmall),
-                        const SizedBox(height: 24),
-                        CupertinoButton.filled(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              CupertinoPageRoute(
-                                builder: (context) => CreatePostPage(onPostCreated: _refreshPosts),
-                              ),
-                            );
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(CupertinoIcons.plus, size: 18),
-                              SizedBox(width: 8),
-                              Text('Create Post'),
-                            ],
+                    child: Padding(
+                      padding: EdgeInsets.all(isMobile ? 24 : 32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(CupertinoIcons.doc_text, color: colors.textMuted, size: isMobile ? 40 : 48),
+                          const SizedBox(height: 16),
+                          Text('No posts yet', style: styles.titleMedium),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Create your first post to get started', 
+                            style: styles.bodySmall,
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 24),
+                          CupertinoButton.filled(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                CupertinoPageRoute(
+                                  builder: (context) => CreatePostPage(onPostCreated: _refreshPosts),
+                                ),
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(CupertinoIcons.plus, size: 18),
+                                SizedBox(width: 8),
+                                Text('Create Post'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(top: 8),
-                  itemCount: posts.length,
-                  itemBuilder: (context, index) => PostCard(post: posts[index]),
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: Responsive.maxContentWidth(context)),
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 8 : 0,
+                        vertical: 8,
+                      ),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) => PostCard(post: posts[index]),
+                    ),
+                  ),
                 );
               },
             ),
@@ -735,40 +782,41 @@ class PostCard extends StatelessWidget {
     final colors = theme.colors;
     final styles = AppTextStyles(colors);
     final isPosted = post['posted'] == true;
+    final isMobile = Responsive.isMobileScreen(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: 6),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 12 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: isMobile ? 36 : 44,
+                  height: isMobile ? 36 : 44,
                   decoration: BoxDecoration(
                     color: colors.surfaceSecondary,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(isMobile ? 18 : 22),
                   ),
                   child: Center(
                     child: Text(
                       '𝕏',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: isMobile ? 16 : 20,
                         fontWeight: FontWeight.bold,
                         color: colors.textPrimary,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: isMobile ? 8 : 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -906,7 +954,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final GitHubService _githubService = GitHubService();
   bool _isLoading = false;
   bool _isUploadingImage = false;
-  File? _selectedImage;
+  PlatformFile? _selectedFile;
+  Uint8List? _selectedImageBytes;
   String? _uploadedImageUrl;
 
   @override
@@ -921,11 +970,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
+        withData: true, // Important for web support
       );
 
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.files.single.bytes != null) {
         setState(() {
-          _selectedImage = File(result.files.single.path!);
+          _selectedFile = result.files.single;
+          _selectedImageBytes = result.files.single.bytes;
           _uploadedImageUrl = null;
         });
       }
@@ -935,12 +986,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _uploadImage() async {
-    if (_selectedImage == null) return;
+    if (_selectedImageBytes == null || _selectedFile == null) return;
 
     setState(() => _isUploadingImage = true);
 
     try {
-      final url = await _githubService.uploadImage(_selectedImage!);
+      final url = await _githubService.uploadImageBytes(
+        _selectedImageBytes!, 
+        _selectedFile!.name,
+      );
       setState(() {
         _uploadedImageUrl = url;
         _isUploadingImage = false;
@@ -953,7 +1007,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   void _removeImage() {
     setState(() {
-      _selectedImage = null;
+      _selectedFile = null;
+      _selectedImageBytes = null;
       _uploadedImageUrl = null;
     });
   }
@@ -969,8 +1024,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
     try {
       String? imageUrl = _uploadedImageUrl;
       
-      if (_selectedImage != null && imageUrl == null) {
-        imageUrl = await _githubService.uploadImage(_selectedImage!);
+      if (_selectedImageBytes != null && _selectedFile != null && imageUrl == null) {
+        imageUrl = await _githubService.uploadImageBytes(
+          _selectedImageBytes!,
+          _selectedFile!.name,
+        );
       }
 
       final hashtags = _hashtagsController.text
@@ -1073,6 +1131,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     final theme = ThemeProvider.of(context);
     final colors = theme.colors;
     final styles = AppTextStyles(colors);
+    final isMobile = Responsive.isMobileScreen(context);
+    final padding = Responsive.padding(context);
 
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
@@ -1094,13 +1154,16 @@ class _CreatePostPageState extends State<CreatePostPage> {
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: Responsive.maxContentWidth(context)),
+            child: SingleChildScrollView(
+              padding: padding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isMobile ? 16 : 20),
                 decoration: BoxDecoration(
                   color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
@@ -1226,14 +1289,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    if (_selectedImage != null) ...[
+                    if (_selectedImageBytes != null) ...[
                       Stack(
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _selectedImage!,
-                              height: 150,
+                            child: Image.memory(
+                              _selectedImageBytes!,
+                              height: isMobile ? 120 : 150,
                               width: double.infinity,
                               fit: BoxFit.cover,
                             ),
@@ -1411,6 +1474,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
               ),
               const SizedBox(height: 16),
             ],
+              ),
+            ),
           ),
         ),
       ),

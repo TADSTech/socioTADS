@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -16,22 +16,22 @@ class GitHubService {
     'Content-Type': 'application/json',
   };
 
-  Future<String> uploadImage(File imageFile) async {
+  /// Upload image from bytes (works on both web and desktop)
+  Future<String> uploadImageBytes(Uint8List bytes, String fileName) async {
     try {
-      final bytes = await imageFile.readAsBytes();
       final base64Content = base64Encode(bytes);
-      final fileName = 'img_${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
+      final uniqueFileName = 'img_${DateTime.now().millisecondsSinceEpoch}_$fileName';
       
       final url = Uri.https(
         'api.github.com',
-        '/repos/$owner/$repo/contents/.github/$imagesPath/$fileName',
+        '/repos/$owner/$repo/contents/.github/$imagesPath/$uniqueFileName',
       );
 
       final response = await http.put(
         url,
         headers: _headers,
         body: jsonEncode({
-          "message": "App: Uploaded image $fileName",
+          "message": "App: Uploaded image $uniqueFileName",
           "content": base64Content,
         }),
       ).timeout(

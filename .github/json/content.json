@@ -1,29 +1,37 @@
 [
-    {
-        "id": "u1",
-        "text": "This will be an interesting year for the future of AI",
-        "time": "2025-12-14T18:00:00",
-        "image": null,
-        "posted": true
-    },
-    {
-        "id": "post_1765723349733",
-        "text": "2026 has to be my year of Ws",
-        "time": "2025-12-14T16:59:00.000",
-        "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765723337284_TADSdisplay.png",
-        "hashtags": [
-            "TADS"
-        ],
-        "posted": true
-    },
-    {
-        "id": "post_1765728315921",
-        "text": "The grind never stops",
-        "time": "2025-12-15T18:04:00.000",
-        "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765728308514_codeotd.jpg",
-        "hashtags": [
-            "grind"
-        ],
-        "posted": false
-    }
+  {
+    "id": "u1",
+    "text": "This will be an interesting year for the future of AI",
+    "time": "2025-12-14T18:00:00",
+    "image": null,
+    "posted": true
+  },
+  {
+    "id": "post_1765723349733",
+    "text": "2026 has to be my year of Ws",
+    "time": "2025-12-14T16:59:00.000",
+    "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765723337284_TADSdisplay.png",
+    "hashtags": [
+      "TADS"
+    ],
+    "posted": true
+  },
+  {
+    "id": "post_1765728315921",
+    "text": "The grind never stops",
+    "time": "2025-12-15T18:04:00.000",
+    "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765728308514_codeotd.jpg",
+    "hashtags": [
+      "grind"
+    ],
+    "posted": false
+  },
+  {
+    "id": "post_1765745801089",
+    "text": "The true AI revolution isn't in standalone tools, but in AI becoming an \"invisible\" layer across all software engineering. This demands a renewed focus on ethical design and robust security, as the...",
+    "time": "2025-12-14T22:56:41.089",
+    "image": null,
+    "hashtags": [],
+    "posted": false
+  }
 ]

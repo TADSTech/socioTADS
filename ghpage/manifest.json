@@ -1,0 +1,21 @@
+{
+  "name": "SocioTADS",
+  "short_name": "SocioTADS",
+  "description": "Free and open-source social media automator with native Linux support using Flutter",
+  "start_url": "https://tadstechs.github.io/socioTADS/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

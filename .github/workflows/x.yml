@@ -1,0 +1,44 @@
+name: X Auto-Poster
+
+on:
+  # Check every hour.
+  schedule:
+    - cron: '0 * * * *' 
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  post_to_x:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Tweepy
+        run: pip install tweepy
+
+      - name: Run Poster Script
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_KEY_SECRET: ${{ secrets.X_API_KEY_SECRET }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: python poster.py
+
+      - name: Commit Status Update
+        # Only run if the script actually posted something (creates a .posted flag file)
+        if: hashFiles('.posted_flag') != ''
+        run: |
+          git config --global user.name "X-Scheduler-Bot"
+          git config --global user.email "bot@github.com"
+          git add .github/json/content.json
+          git commit -m "🤖 Auto-update: Marked posts as published"
+          git push

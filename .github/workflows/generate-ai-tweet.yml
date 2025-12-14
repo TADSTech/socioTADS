@@ -47,13 +47,13 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python -c "
+          python << 'EOF'
 from api.ai import injectJsonData
 category = '${{ github.event.inputs.category }}'
 schedule_hours = int('${{ github.event.inputs.schedule_hours }}' or '2')
 char_limit = int('${{ github.event.inputs.char_limit }}' or '200')
 injectJsonData(category=category, schedule_hours=schedule_hours, char_limit=char_limit)
-          "
+          EOF
 
       - name: Commit Changes
         run: |

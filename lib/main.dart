@@ -1,30 +1,88 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
-import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:sociotads/api/git_service.dart';
+import 'package:sociotads/theme/app_theme.dart';
+import 'package:sociotads/components/titlebar.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  
   runApp(const MyApp());
+  
+  doWhenWindowReady(() {
+    final win = appWindow;
+    const initialSize = Size(1100, 750);
+    win.minSize = const Size(800, 600);
+    win.size = initialSize;
+    win.alignment = Alignment.center;
+    win.title = "SocioTADS";
+    win.show();
+  });
 }
 
-class MyApp extends StatelessWidget {
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  AppThemeMode _themeMode = AppThemeMode.dark;
+
+  void _setTheme(AppThemeMode mode) {
+    setState(() => _themeMode = mode);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
-      title: 'SocioTADS',
-      home: LandingPage(),
-      debugShowCheckedModeBanner: false,
-      theme: CupertinoThemeData(
-        textTheme: CupertinoTextThemeData(
-          navTitleTextStyle: TextStyle(
-            fontFamily: 'BBH_Bogle',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    final colors = AppColors.fromMode(_themeMode);
+    
+    return ThemeProvider(
+      themeMode: _themeMode,
+      colors: colors,
+      setTheme: _setTheme,
+      child: CupertinoApp(
+        title: 'SocioTADS',
+        debugShowCheckedModeBanner: false,
+        theme: CupertinoThemeData(
+          brightness: colors.brightness,
+          primaryColor: colors.accent,
+          scaffoldBackgroundColor: colors.background,
+          barBackgroundColor: colors.surface,
+          textTheme: CupertinoTextThemeData(
+            primaryColor: colors.textPrimary,
+            navTitleTextStyle: TextStyle(
+              fontFamily: 'BBH_Bogle',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+            navActionTextStyle: TextStyle(
+              fontFamily: 'BBH_Bogle',
+              color: colors.accent,
+            ),
           ),
         ),
+        home: Column(
+          children: [
+            const CustomTitleBar(),
+            Expanded(child: const LandingPage()),
+          ],
+        ),
+        builder: (context, child) {
+          return Column(
+            children: [
+              const CustomTitleBar(),
+              Expanded(child: child ?? const SizedBox()),
+            ],
+          );
+        },
       ),
     );
   }
@@ -35,55 +93,333 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.white,
+      backgroundColor: colors.background,
       child: SafeArea(
-        child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'SocioTADS',
-                style: const TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: CupertinoColors.black,
+              const Spacer(flex: 1),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: colors.border, width: 1),
+                ),
+                child: Icon(
+                  CupertinoIcons.chart_bar_alt_fill,
+                  size: 40,
+                  color: colors.accent,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              Text('SocioTADS', style: styles.displayLarge),
+              const SizedBox(height: 12),
               Text(
-                'Monitor your socials in sleek B&W',
-                style: const TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 18,
-                  color: CupertinoColors.systemGrey,
-                ),
+                'Monitor & schedule your social posts\nwith a beautiful, minimal interface',
+                style: styles.bodyLarge.copyWith(color: colors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              CupertinoButton.filled(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    CupertinoPageRoute(
-                      builder: (context) => const XPage(),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.graph_circle, color: colors.accent, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Analytics', style: styles.titleMedium),
+                              Text('Track post performance', style: styles.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: const SizedBox(
-                  width: 200,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Container(height: 1, color: colors.border),
+                    ),
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.clock, color: colors.accent, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Scheduling', style: styles.titleMedium),
+                              Text('Plan posts ahead of time', style: styles.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Container(height: 1, color: colors.border),
+                    ),
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.layers, color: colors.accent, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Multi-platform', style: styles.titleMedium),
+                              Text('Manage all socials in one place', style: styles.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(flex: 1),
+              Text('AVAILABLE PLATFORMS', style: styles.caption),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  color: colors.surface,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  borderRadius: BorderRadius.circular(12),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) => const XPage(),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.xmark_circle, size: 20),
-                      SizedBox(width: 8),
-                      Text('Open X'),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: colors.textPrimary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '𝕏',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: colors.background,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'X (Twitter)',
+                        style: styles.titleMedium,
+                      ),
+                      const Spacer(),
+                      Icon(CupertinoIcons.chevron_right, color: colors.textMuted, size: 20),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: colors.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border, width: 1),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(CupertinoIcons.add, color: colors.textMuted, size: 20),
+                    const SizedBox(width: 12),
+                    Text(
+                      'More platforms coming soon',
+                      style: styles.bodyMedium.copyWith(color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(flex: 1),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  showCupertinoModalPopup(
+                    context: context,
+                    builder: (context) => const ThemeSelectorSheet(),
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(CupertinoIcons.paintbrush, color: colors.textMuted, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Change Theme', style: styles.bodySmall),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class ThemeSelectorSheet extends StatelessWidget {
+  const ThemeSelectorSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text('Choose Theme', style: styles.headlineMedium),
+          const SizedBox(height: 24),
+          _ThemeOption(
+            title: 'Dark',
+            subtitle: 'Easy on the eyes',
+            icon: CupertinoIcons.moon_fill,
+            mode: AppThemeMode.dark,
+            isSelected: theme.themeMode == AppThemeMode.dark,
+            onTap: () {
+              theme.setTheme(AppThemeMode.dark);
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 12),
+          _ThemeOption(
+            title: 'Light',
+            subtitle: 'Clean and bright',
+            icon: CupertinoIcons.sun_max_fill,
+            mode: AppThemeMode.light,
+            isSelected: theme.themeMode == AppThemeMode.light,
+            onTap: () {
+              theme.setTheme(AppThemeMode.light);
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 12),
+          _ThemeOption(
+            title: 'Light Blue',
+            subtitle: 'Calm and focused',
+            icon: CupertinoIcons.drop_fill,
+            mode: AppThemeMode.lightBlue,
+            isSelected: theme.themeMode == AppThemeMode.lightBlue,
+            onTap: () {
+              theme.setTheme(AppThemeMode.lightBlue);
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 12),
+          _ThemeOption(
+            title: 'Reading',
+            subtitle: 'Warm sepia tones',
+            icon: CupertinoIcons.book_fill,
+            mode: AppThemeMode.reading,
+            isSelected: theme.themeMode == AppThemeMode.reading,
+            onTap: () {
+              theme.setTheme(AppThemeMode.reading);
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final AppThemeMode mode;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeOption({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.mode,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.accent.withOpacity(0.1) : colors.surfaceSecondary,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? colors.accent : colors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? colors.accent : colors.textSecondary, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: styles.titleMedium),
+                  Text(subtitle, style: styles.bodySmall),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(CupertinoIcons.checkmark_circle_fill, color: colors.accent, size: 24),
+          ],
         ),
       ),
     );
@@ -100,6 +436,7 @@ class XPage extends StatefulWidget {
 class _XPageState extends State<XPage> {
   late Future<List<Map<String, dynamic>>> _postsFuture;
   final GitHubService _githubService = GitHubService();
+  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -107,82 +444,241 @@ class _XPageState extends State<XPage> {
     _postsFuture = _githubService.fetchPosts();
   }
 
+  void _refreshPosts() {
+    setState(() {
+      _postsFuture = _githubService.fetchPosts();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.white,
+      backgroundColor: colors.background,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('X Posts'),
-        backgroundColor: CupertinoColors.white,
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: () {
-            Navigator.of(context).push(
-              CupertinoPageRoute(
-                builder: (context) => CreatePostPage(
-                  onPostCreated: () {
-                    setState(() {
-                      _postsFuture = _githubService.fetchPosts();
-                    });
-                  },
+        middle: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.textPrimary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '𝕏',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: colors.background,
                 ),
               ),
-            );
-          },
-          child: const Icon(CupertinoIcons.plus),
+            ),
+            const SizedBox(width: 8),
+            Text('Posts', style: styles.titleLarge),
+          ],
+        ),
+        backgroundColor: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _refreshPosts,
+              child: Icon(CupertinoIcons.refresh, color: colors.textSecondary, size: 22),
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (context) => CreatePostPage(onPostCreated: _refreshPosts),
+                  ),
+                );
+              },
+              child: Icon(CupertinoIcons.plus_circle_fill, color: colors.accent, size: 28),
+            ),
+          ],
         ),
       ),
-      child: SafeArea(
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _postsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CupertinoActivityIndicator(),
-              );
-            }
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
+            ),
+            child: Row(
+              children: [
+                _TabButton(
+                  label: 'All',
+                  icon: CupertinoIcons.list_bullet,
+                  isSelected: _selectedTab == 0,
+                  onTap: () => setState(() => _selectedTab = 0),
+                ),
+                const SizedBox(width: 12),
+                _TabButton(
+                  label: 'Scheduled',
+                  icon: CupertinoIcons.clock,
+                  isSelected: _selectedTab == 1,
+                  onTap: () => setState(() => _selectedTab = 1),
+                ),
+                const SizedBox(width: 12),
+                _TabButton(
+                  label: 'Posted',
+                  icon: CupertinoIcons.checkmark_circle,
+                  isSelected: _selectedTab == 2,
+                  onTap: () => setState(() => _selectedTab = 2),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _postsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CupertinoActivityIndicator(radius: 16),
+                        const SizedBox(height: 16),
+                        Text('Loading posts...', style: styles.bodySmall),
+                      ],
+                    ),
+                  );
+                }
 
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error loading posts',
-                      style: const TextStyle(
-                        color: CupertinoColors.systemRed,
-                        fontSize: 16,
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(CupertinoIcons.exclamationmark_triangle, color: colors.error, size: 48),
+                          const SizedBox(height: 16),
+                          Text('Error loading posts', style: styles.titleMedium),
+                          const SizedBox(height: 8),
+                          Text(
+                            snapshot.error.toString(),
+                            style: styles.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          CupertinoButton.filled(
+                            onPressed: _refreshPosts,
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    CupertinoButton(
-                      onPressed: () {
-                        setState(() {
-                          _postsFuture = _githubService.fetchPosts();
-                        });
-                      },
-                      child: const Text('Retry'),
+                  );
+                }
+
+                var posts = snapshot.data ?? [];
+                
+                if (_selectedTab == 1) {
+                  posts = posts.where((p) => p['posted'] != true).toList();
+                } else if (_selectedTab == 2) {
+                  posts = posts.where((p) => p['posted'] == true).toList();
+                }
+
+                if (posts.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(CupertinoIcons.doc_text, color: colors.textMuted, size: 48),
+                        const SizedBox(height: 16),
+                        Text('No posts yet', style: styles.titleMedium),
+                        const SizedBox(height: 8),
+                        Text('Create your first post to get started', style: styles.bodySmall),
+                        const SizedBox(height: 24),
+                        CupertinoButton.filled(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              CupertinoPageRoute(
+                                builder: (context) => CreatePostPage(onPostCreated: _refreshPosts),
+                              ),
+                            );
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(CupertinoIcons.plus, size: 18),
+                              SizedBox(width: 8),
+                              Text('Create Post'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
+                  );
+                }
 
-            final posts = snapshot.data ?? [];
-            if (posts.isEmpty) {
-              return const Center(
-                child: Text('No posts yet'),
-              );
-            }
-
-            return ListView.builder(
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                final post = posts[index];
-                return PostCard(post: post);
+                return ListView.builder(
+                  padding: const EdgeInsets.only(top: 8),
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) => PostCard(post: posts[index]),
+                );
               },
-            );
-          },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabButton({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? colors.accent : colors.surfaceSecondary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? CupertinoColors.white : colors.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: styles.labelMedium.copyWith(
+                color: isSelected ? CupertinoColors.white : colors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -195,135 +691,197 @@ class PostCard extends StatelessWidget {
   const PostCard({required this.post});
 
   String _formatTime(String dateTimeString) {
-    final dateTime = DateTime.parse(dateTimeString);
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
 
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return dateTime.toString().split(' ')[0];
+      if (difference.isNegative) {
+        final futureDiff = dateTime.difference(now);
+        if (futureDiff.inHours < 24) {
+          return 'in ${futureDiff.inHours}h';
+        } else {
+          return 'in ${futureDiff.inDays}d';
+        }
+      }
+
+      if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays}d ago';
+      } else {
+        return dateTime.toString().split(' ')[0];
+      }
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  String _formatFullDate(String dateTimeString) {
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return 'Unknown date';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+    final isPosted = post['posted'] == true;
+
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: CupertinoColors.systemGrey5,
-            width: 1,
-          ),
-        ),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'SocioTADS',
-                      style: const TextStyle(
-                        fontFamily: 'BBH_Bogle',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: CupertinoColors.black,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '𝕏',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
                       ),
                     ),
-                    Text(
-                      '@sociotads',
-                      style: const TextStyle(
-                        fontFamily: 'BBH_Bogle',
-                        fontSize: 14,
-                        color: CupertinoColors.systemGrey,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                Text(
-                  _formatTime(post['time'] ?? DateTime.now().toString()),
-                  style: const TextStyle(
-                    fontFamily: 'BBH_Bogle',
-                    fontSize: 12,
-                    color: CupertinoColors.systemGrey,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('SocioTADS', style: styles.titleMedium),
+                          const SizedBox(width: 4),
+                          Icon(CupertinoIcons.checkmark_seal_fill, color: colors.accent, size: 16),
+                        ],
+                      ),
+                      Text('@sociotads', style: styles.bodySmall),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isPosted ? colors.success.withOpacity(0.15) : colors.warning.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPosted ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.clock_fill,
+                        size: 14,
+                        color: isPosted ? colors.success : colors.warning,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isPosted ? 'Posted' : 'Scheduled',
+                        style: styles.caption.copyWith(
+                          color: isPosted ? colors.success : colors.warning,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               post['text'] ?? '',
-              style: const TextStyle(
-                fontFamily: 'BBH_Bogle',
-                fontSize: 14,
-                color: CupertinoColors.black,
-              ),
+              style: styles.bodyLarge,
             ),
             if (post['image'] != null && post['image'].toString().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Container(
-                  width: double.infinity,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemGrey6,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Image.network(
-                    post['image'],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(CupertinoIcons.photo_fill),
-                      );
-                    },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    height: 180,
+                    color: colors.surfaceSecondary,
+                    child: Image.network(
+                      post['image'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(CupertinoIcons.photo, color: colors.textMuted, size: 32),
+                              const SizedBox(height: 8),
+                              Text('Image unavailable', style: styles.caption),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
             if (post['hashtags'] != null && (post['hashtags'] as List).isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: 12),
                 child: Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: (post['hashtags'] as List<dynamic>)
-                      .map((tag) => Text(
-                            '#$tag',
-                            style: const TextStyle(
-                              fontFamily: 'BBH_Bogle',
-                              fontSize: 12,
-                              color: CupertinoColors.systemBlue,
+                      .map((tag) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: colors.accent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '#$tag',
+                              style: styles.labelMedium.copyWith(color: colors.accent),
                             ),
                           ))
                       .toList(),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Row(
-                children: [
-                  Text(
-                    post['posted'] == true ? 'Posted' : 'Scheduled',
-                    style: TextStyle(
-                      fontFamily: 'BBH_Bogle',
-                      fontSize: 12,
-                      color: post['posted'] == true
-                          ? CupertinoColors.systemGreen
-                          : CupertinoColors.systemOrange,
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 16),
+            Container(height: 1, color: colors.border),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(CupertinoIcons.calendar, size: 14, color: colors.textMuted),
+                const SizedBox(width: 6),
+                Text(
+                  _formatFullDate(post['time'] ?? DateTime.now().toString()),
+                  style: styles.caption,
+                ),
+                const Spacer(),
+                Text(
+                  _formatTime(post['time'] ?? DateTime.now().toString()),
+                  style: styles.labelMedium.copyWith(color: colors.textSecondary),
+                ),
+              ],
             ),
           ],
         ),
@@ -343,36 +901,78 @@ class CreatePostPage extends StatefulWidget {
 
 class _CreatePostPageState extends State<CreatePostPage> {
   final TextEditingController _textController = TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
   final TextEditingController _hashtagsController = TextEditingController();
-  final TextEditingController _timeController = TextEditingController();
+  DateTime _scheduledTime = DateTime.now().add(const Duration(hours: 1));
   final GitHubService _githubService = GitHubService();
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _timeController.text = DateTime.now().toString().split('.')[0];
-  }
+  bool _isUploadingImage = false;
+  File? _selectedImage;
+  String? _uploadedImageUrl;
 
   @override
   void dispose() {
     _textController.dispose();
-    _imageUrlController.dispose();
     _hashtagsController.dispose();
-    _timeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          _selectedImage = File(result.files.single.path!);
+          _uploadedImageUrl = null;
+        });
+      }
+    } catch (e) {
+      _showAlert('Error', 'Failed to pick image: ${e.toString()}');
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedImage == null) return;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final url = await _githubService.uploadImage(_selectedImage!);
+      setState(() {
+        _uploadedImageUrl = url;
+        _isUploadingImage = false;
+      });
+    } catch (e) {
+      setState(() => _isUploadingImage = false);
+      _showAlert('Error', 'Failed to upload image: ${e.toString()}');
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+      _uploadedImageUrl = null;
+    });
   }
 
   Future<void> _createPost() async {
     if (_textController.text.isEmpty) {
-      _showAlert('Post content cannot be empty');
+      _showAlert('Error', 'Post content cannot be empty');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
+      String? imageUrl = _uploadedImageUrl;
+      
+      if (_selectedImage != null && imageUrl == null) {
+        imageUrl = await _githubService.uploadImage(_selectedImage!);
+      }
+
       final hashtags = _hashtagsController.text
           .split(',')
           .map((tag) => tag.trim())
@@ -382,8 +982,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
       final newPost = {
         'id': 'post_${DateTime.now().millisecondsSinceEpoch}',
         'text': _textController.text,
-        'time': _timeController.text,
-        'image': _imageUrlController.text.isEmpty ? null : _imageUrlController.text,
+        'time': _scheduledTime.toIso8601String(),
+        'image': imageUrl,
         'hashtags': hashtags.isEmpty ? null : hashtags,
         'posted': false,
       };
@@ -393,128 +993,423 @@ class _CreatePostPageState extends State<CreatePostPage> {
       if (mounted) {
         Navigator.of(context).pop();
         widget.onPostCreated();
-        _showAlert('Post created successfully!');
       }
     } catch (e) {
-      _showAlert('Failed to create post: ${e.toString()}');
+      _showAlert('Error', 'Failed to create post: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showAlert(String message) {
+  void _showAlert(String title, String message) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Notice'),
+        title: Text(title),
         content: Text(message),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text('OK', style: TextStyle(color: colors.accent)),
           ),
         ],
       ),
     );
   }
 
+  void _showDatePicker() {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Cancel', style: TextStyle(color: colors.textSecondary)),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Done', style: TextStyle(color: colors.accent)),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.dateAndTime,
+                initialDateTime: _scheduledTime,
+                minimumDate: DateTime.now(),
+                onDateTimeChanged: (DateTime value) {
+                  setState(() => _scheduledTime = value);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeProvider.of(context);
+    final colors = theme.colors;
+    final styles = AppTextStyles(colors);
+
     return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.white,
+      backgroundColor: colors.background,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Create Post'),
-        backgroundColor: CupertinoColors.white,
+        middle: Text('Create Post', style: styles.titleLarge),
+        backgroundColor: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.border, width: 0.5)),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text('Cancel', style: TextStyle(color: colors.textSecondary)),
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _isLoading ? null : _createPost,
+          child: _isLoading
+              ? const CupertinoActivityIndicator()
+              : Text('Post', style: TextStyle(color: colors.accent, fontWeight: FontWeight.w600)),
         ),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Post Content',
-                style: TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border, width: 1),
                 ),
-              ),
-              const SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _textController,
-                placeholder: 'What do you want to post?',
-                maxLines: 5,
-                padding: const EdgeInsets.all(12),
-                style: const TextStyle(fontFamily: 'BBH_Bogle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.pencil, color: colors.accent, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Post Content', style: styles.labelLarge),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoTextField(
+                      controller: _textController,
+                      placeholder: 'What would you like to share?',
+                      maxLines: 6,
+                      minLines: 4,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border, width: 1),
+                      ),
+                      placeholderStyle: TextStyle(color: colors.textMuted, fontFamily: 'BBH_Bogle'),
+                      style: styles.bodyLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(CupertinoIcons.number, size: 14, color: colors.textMuted),
+                        const SizedBox(width: 4),
+                        Text('280 characters max', style: styles.caption),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Scheduled Time',
-                style: TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border, width: 1),
                 ),
-              ),
-              const SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _timeController,
-                placeholder: 'YYYY-MM-DDTHH:mm:ss',
-                padding: const EdgeInsets.all(12),
-                style: const TextStyle(fontFamily: 'BBH_Bogle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.clock, color: colors.accent, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Schedule', style: styles.labelLarge),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: _showDatePicker,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colors.border, width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${_scheduledTime.day}/${_scheduledTime.month}/${_scheduledTime.year}',
+                                    style: styles.titleMedium,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_scheduledTime.hour.toString().padLeft(2, '0')}:${_scheduledTime.minute.toString().padLeft(2, '0')}',
+                                    style: styles.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(CupertinoIcons.chevron_down, color: colors.textMuted, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Image URL (Optional)',
-                style: TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border, width: 1),
                 ),
-              ),
-              const SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _imageUrlController,
-                placeholder: 'https://example.com/image.jpg',
-                padding: const EdgeInsets.all(12),
-                style: const TextStyle(fontFamily: 'BBH_Bogle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.photo, color: colors.accent, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Media', style: styles.labelLarge),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text('Optional', style: styles.caption),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_selectedImage != null) ...[
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _selectedImage!,
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Row(
+                              children: [
+                                if (_uploadedImageUrl != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: colors.success.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(CupertinoIcons.checkmark_circle_fill, size: 14, color: CupertinoColors.white),
+                                        const SizedBox(width: 4),
+                                        Text('Uploaded', style: styles.caption.copyWith(color: CupertinoColors.white)),
+                                      ],
+                                    ),
+                                  ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: _removeImage,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: colors.error.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(CupertinoIcons.xmark, size: 16, color: CupertinoColors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_isUploadingImage)
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: colors.background.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CupertinoActivityIndicator(),
+                                      const SizedBox(height: 8),
+                                      Text('Uploading...', style: styles.bodySmall),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (_uploadedImageUrl == null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            color: colors.accent,
+                            borderRadius: BorderRadius.circular(10),
+                            onPressed: _isUploadingImage ? null : _uploadImage,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(CupertinoIcons.cloud_upload, size: 18, color: CupertinoColors.white),
+                                const SizedBox(width: 8),
+                                Text('Upload to GitHub', style: styles.labelMedium.copyWith(color: CupertinoColors.white)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ] else
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.border, width: 1, style: BorderStyle.solid),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: colors.accent.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(CupertinoIcons.photo_on_rectangle, color: colors.accent, size: 32),
+                              ),
+                              const SizedBox(height: 12),
+                              Text('Click to select an image', style: styles.titleMedium),
+                              const SizedBox(height: 4),
+                              Text('PNG, JPG, GIF up to 10MB', style: styles.caption),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Hashtags (Optional)',
-                style: TextStyle(
-                  fontFamily: 'BBH_Bogle',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: CupertinoColors.black,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border, width: 1),
                 ),
-              ),
-              const SizedBox(height: 8),
-              CupertinoTextField(
-                controller: _hashtagsController,
-                placeholder: 'AI, Technology, Innovation (comma separated)',
-                padding: const EdgeInsets.all(12),
-                style: const TextStyle(fontFamily: 'BBH_Bogle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.number, color: colors.accent, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Hashtags', style: styles.labelLarge),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text('Optional', style: styles.caption),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoTextField(
+                      controller: _hashtagsController,
+                      placeholder: 'AI, Technology, Innovation',
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border, width: 1),
+                      ),
+                      placeholderStyle: TextStyle(color: colors.textMuted, fontFamily: 'BBH_Bogle'),
+                      style: styles.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Separate with commas', style: styles.caption),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                child: CupertinoButton.filled(
+                child: CupertinoButton(
+                  color: colors.accent,
+                  borderRadius: BorderRadius.circular(12),
                   onPressed: _isLoading ? null : _createPost,
                   child: _isLoading
                       ? const CupertinoActivityIndicator(color: CupertinoColors.white)
-                      : const Text('Create Post'),
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(CupertinoIcons.paperplane_fill, size: 18),
+                            const SizedBox(width: 8),
+                            Text('Schedule Post', style: styles.titleMedium.copyWith(color: CupertinoColors.white)),
+                          ],
+                        ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

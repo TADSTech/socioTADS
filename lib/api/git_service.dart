@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -6,6 +7,7 @@ class GitHubService {
   final String owner = "TADSTech";
   final String repo = "socioTADS";
   final String path = "json/content.json";
+  final String imagesPath = "images";
   final String token = dotenv.env['GIT_PAT'] ?? "YOUR_PERSONAL_ACCESS_TOKEN";
 
   Map<String, String> get _headers => {
@@ -13,6 +15,41 @@ class GitHubService {
     'Accept': 'application/vnd.github.v3+json',
     'Content-Type': 'application/json',
   };
+
+  Future<String> uploadImage(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final base64Content = base64Encode(bytes);
+      final fileName = 'img_${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
+      
+      final url = Uri.https(
+        'api.github.com',
+        '/repos/$owner/$repo/contents/.github/$imagesPath/$fileName',
+      );
+
+      final response = await http.put(
+        url,
+        headers: _headers,
+        body: jsonEncode({
+          "message": "App: Uploaded image $fileName",
+          "content": base64Content,
+        }),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Upload timeout'),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['content']['download_url'] ?? '';
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['message'] ?? 'Failed to upload image');
+      }
+    } catch (e) {
+      throw Exception('Image upload failed: $e');
+    }
+  }
 
   Future<List<Map<String, dynamic>>> fetchPosts() async {
     try {

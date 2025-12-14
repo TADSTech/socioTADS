@@ -76,7 +76,7 @@ def generate_tweet(category: str = "news", char_limit: int = 250) -> str:
         print(f"Error generating tweet: {e}")
         return "AI update: Exploring the future of tech! #AI #Tech"
 
-def injectJsonData(category: str = "news", schedule_hours: int = 2, char_limit: int = 280):
+def injectJsonData(category: str = "news", schedule_hours: int = 12, char_limit: int = 280):
     """Generate a new tweet and append it to content.json"""
     try:
         # Path to the content.json file
@@ -133,7 +133,7 @@ def main():
     # 3. Apply limits and category
     injectJsonData(
         category=selected_category, 
-        schedule_hours=2, 
+        schedule_hours=12, 
         char_limit=280 # Enforce your free plan limit here
     )
 

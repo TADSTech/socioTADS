@@ -46,14 +46,18 @@ jobs:
       - name: Generate AI Tweet
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CATEGORY: ${{ github.event.inputs.category }}
+          SCHEDULE_HOURS: ${{ github.event.inputs.schedule_hours }}
+          CHAR_LIMIT: ${{ github.event.inputs.char_limit }}
         run: |
-          python << 'EOF'
-from api.ai import injectJsonData
-category = '${{ github.event.inputs.category }}'
-schedule_hours = int('${{ github.event.inputs.schedule_hours }}' or '2')
-char_limit = int('${{ github.event.inputs.char_limit }}' or '200')
-injectJsonData(category=category, schedule_hours=schedule_hours, char_limit=char_limit)
-          EOF
+          python -c "
+          import os
+          from api.ai import injectJsonData
+          category = os.environ.get('CATEGORY', 'news')
+          schedule_hours = int(os.environ.get('SCHEDULE_HOURS', '2') or '2')
+          char_limit = int(os.environ.get('CHAR_LIMIT', '200') or '200')
+          injectJsonData(category=category, schedule_hours=schedule_hours, char_limit=char_limit)
+          "
 
       - name: Commit Changes
         run: |

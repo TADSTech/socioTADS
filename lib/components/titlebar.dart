@@ -22,22 +22,13 @@ class CustomTitleBar extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 16),
                 child: Row(
                   children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: colors.accent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'S',
-                          style: TextStyle(
-                            color: CupertinoColors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     const SizedBox(width: 10),

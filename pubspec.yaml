@@ -1,5 +1,5 @@
 name: sociotads
-description: "Monitor your socials in sleek B&W."
+description: "Monitor your socials easily from your desktop."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -27,3 +27,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/logo.png

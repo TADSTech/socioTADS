@@ -18,7 +18,7 @@ void main() async {
     const initialSize = Size(1100, 750);
     win.minSize = const Size(800, 600);
     win.size = initialSize;
-    win.alignment = Alignment.centerLeft;
+    win.alignment = Alignment.center;
     win.title = "SocioTADS";
     win.show();
   });

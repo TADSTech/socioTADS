@@ -47,8 +47,7 @@ def generate_tweet(category: str = "news", char_limit: int = 250) -> str:
         f"Constraints:\n"
         f"1. Strictly keep the length under 200 characters(Including white spaces and paragraphs), summarizing in any way shape or form.\n"
         f"2. Use engaging, professional tone.\n"
-        f"3. Include 1-2 relevant hashtags at the end only if they do not surpass the 200 character limit.\n"
-        f"4. Do not include URLs or markdown formatting like **bold**."
+        f"3. Do not include URLs or markdown formatting like **bold**."
     )
 
     try:

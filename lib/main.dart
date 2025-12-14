@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:sociotads/api/git_service.dart';
@@ -13,7 +14,18 @@ import 'main_desktop.dart' if (dart.library.html) 'main_web.dart' as platform;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  
+  // Load environment variables - handle web builds differently
+  if (!kIsWeb) {
+    // Desktop: load from .env file
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      print('Warning: Could not load .env file: $e');
+    }
+  }
+  // For web, dotenv won't have credentials anyway, so we skip loading
+  // The app will use placeholder/default values set in the code
   
   runApp(const MyApp());
   

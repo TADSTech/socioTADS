@@ -8,7 +8,15 @@ class GitHubService {
   final String repo = "socioTADS";
   final String path = "json/content.json";
   final String imagesPath = "images";
-  final String token = dotenv.env['GIT_PAT'] ?? "YOUR_PERSONAL_ACCESS_TOKEN";
+  
+  String get token {
+    try {
+      return dotenv.env['GIT_PAT'] ?? "YOUR_PERSONAL_ACCESS_TOKEN";
+    } catch (e) {
+      // dotenv not initialized yet
+      return "YOUR_PERSONAL_ACCESS_TOKEN";
+    }
+  }
 
   Map<String, String> get _headers => {
     'Authorization': 'token $token',

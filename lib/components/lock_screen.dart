@@ -26,8 +26,15 @@ class _LockScreenState extends State<LockScreen> with SingleTickerProviderStateM
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
-  // The expected code from environment variable
-  String get _expectedCode => dotenv.env['UNLOCK_CODE'] ?? '12345678901';
+  // The expected code from environment variable with fallback
+  String get _expectedCode {
+    try {
+      return dotenv.env['UNLOCK_CODE'] ?? '12345678901';
+    } catch (e) {
+      // dotenv not initialized yet, use default
+      return '12345678901';
+    }
+  }
 
   @override
   void initState() {

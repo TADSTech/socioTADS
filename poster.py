@@ -1,8 +1,11 @@
 import os
 import json
 import tweepy
-from datetime import datetime
+from datetime import datetime, timezone
 import glob
+from dotenv import load_dotenv
+
+load_dotenv()
 
 JSON_PATH = ".github/json/content.json"
 IMAGES_DIR = ".github/images/"
@@ -46,7 +49,7 @@ def process_queue():
             return
 
     client, api = get_clients()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     posts_updated = False
 
     for post in posts:
@@ -58,20 +61,27 @@ def process_queue():
         # Remove milliseconds if present (e.g., .000)
         if '.' in time_str:
             time_str = time_str.split('.')[0]
-        post_time = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+        post_time = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
         
         if post_time <= now:
             print(f" Time to post: {post['id']}")
             
+            media_id = None
             if post.get('image'):
-                image_path = os.path.join(IMAGES_DIR, post['image'])
-                if os.path.exists(image_path):
+                image_path = post['image']
+                # Check if it's a local file path (doesn't start with http)
+                if not image_path.startswith('http'):
+                    image_path = os.path.join(IMAGES_DIR, image_path)
+                
+                if not image_path.startswith('http') and os.path.exists(image_path):
                     print(f"   Uploading image: {image_path}")
                     try:
                         media = api.media_upload(filename=image_path)
                         media_id = media.media_id
                     except Exception as e:
                         print(f"Image upload failed: {e}")
+                elif image_path.startswith('http'):
+                    print(f"   Skipping remote URL image: {image_path}")
                 else:
                     print(f"Image file not found: {image_path}")
 

@@ -41,5 +41,13 @@
     "image": null,
     "hashtags": [],
     "posted": false
+  },
+  {
+    "id": "post_1765752841921",
+    "text": "GPT-5.2's coding performance sets a new record (55.6% SWE-Bench Pro) and offers deep tool integration. Developers gain a powerful AI agent for complex tasks, accelerating workflows and building adv...",
+    "time": "2025-12-15T00:54:01.921",
+    "image": null,
+    "hashtags": [],
+    "posted": false
   }
 ]

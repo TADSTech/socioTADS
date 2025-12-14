@@ -45,9 +45,9 @@ def generate_tweet(category: str = "news", char_limit: int = 250) -> str:
     final_prompt = (
         f"{base_prompt}\n\n"
         f"Constraints:\n"
-        f"1. Strictly keep the length under {char_limit} characters, summarizing in any way shape or form.\n"
+        f"1. Strictly keep the length under 200 characters(Including white spaces and paragraphs), summarizing in any way shape or form.\n"
         f"2. Use engaging, professional tone.\n"
-        f"3. Include 1-2 relevant hashtags at the end only if they do not surpass the {char_limit}.\n"
+        f"3. Include 1-2 relevant hashtags at the end only if they do not surpass the 200 character limit.\n"
         f"4. Do not include URLs or markdown formatting like **bold**."
     )
 
@@ -77,7 +77,7 @@ def generate_tweet(category: str = "news", char_limit: int = 250) -> str:
         print(f"Error generating tweet: {e}")
         return "AI update: Exploring the future of tech! #AI #Tech"
 
-def injectJsonData(category: str = "news", schedule_hours: int = 2, char_limit: int = 200):
+def injectJsonData(category: str = "news", schedule_hours: int = 2, char_limit: int = 280):
     """Generate a new tweet and append it to content.json"""
     try:
         # Path to the content.json file
@@ -135,7 +135,7 @@ def main():
     injectJsonData(
         category=selected_category, 
         schedule_hours=2, 
-        char_limit=200 # Enforce your free plan limit here
+        char_limit=280 # Enforce your free plan limit here
     )
 
 if __name__ == "__main__":

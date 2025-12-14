@@ -585,13 +585,16 @@ class _XPageState extends State<XPage> {
   }
 
   void _launchGitHubAction(String category) async {
-    final url = Uri.parse(
-      'https://github.com/TADSTech/socioTADS/actions/workflows/generate-ai-tweet.yml',
-    );
-    
     try {
-      // Note: In a real app, you'd use url_launcher to open this
-      // For now, show a confirmation dialog
+      await _githubService.triggerWorkflow(
+        'generate-ai-tweet.yml',
+        inputs: {
+          'category': category,
+          'schedule_hours': '2',
+          'char_limit': '200',
+        },
+      );
+
       if (!mounted) return;
       
       showCupertinoDialog(
@@ -606,7 +609,7 @@ class _XPageState extends State<XPage> {
                 color: CupertinoColors.systemGreen, size: 48),
               const SizedBox(height: 12),
               Text(
-                'Tweet generation started!\n\nCategory: $category\n\nYou can monitor progress on GitHub.',
+                'Tweet generation started!\n\nCategory: $category\n\nThe new post will appear shortly.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13),
               ),
@@ -616,8 +619,8 @@ class _XPageState extends State<XPage> {
             CupertinoDialogAction(
               onPressed: () {
                 Navigator.pop(context);
-                // Refresh posts after a delay
-                Future.delayed(const Duration(seconds: 2), _refreshPosts);
+                // Refresh posts after a delay to allow the action to complete
+                Future.delayed(const Duration(seconds: 10), _refreshPosts);
               },
               isDefaultAction: true,
               child: const Text('OK'),

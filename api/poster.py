@@ -1,6 +1,8 @@
 import os
 import json
 import tweepy
+import requests
+import tempfile
 from datetime import datetime, timezone
 import glob
 from dotenv import load_dotenv
@@ -10,6 +12,31 @@ load_dotenv()
 JSON_PATH = ".github/json/content.json"
 IMAGES_DIR = ".github/images/"
 FLAG_FILE = ".posted_flag"
+
+def download_image(url):
+    """Download an image from a URL and return a temporary file path."""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        
+        # Determine file extension from URL or content-type
+        content_type = response.headers.get('content-type', '')
+        if 'png' in url.lower() or 'png' in content_type:
+            ext = '.png'
+        elif 'gif' in url.lower() or 'gif' in content_type:
+            ext = '.gif'
+        else:
+            ext = '.jpg'
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+        temp_file.write(response.content)
+        temp_file.close()
+        
+        return temp_file.name
+    except Exception as e:
+        print(f"   Failed to download image: {e}")
+        return None
 
 def get_clients():
     """
@@ -67,23 +94,39 @@ def process_queue():
             print(f" Time to post: {post['id']}")
             
             media_id = None
+            temp_image_path = None
+            
             if post.get('image'):
                 image_path = post['image']
-                # Check if it's a local file path (doesn't start with http)
-                if not image_path.startswith('http'):
-                    image_path = os.path.join(IMAGES_DIR, image_path)
                 
-                if not image_path.startswith('http') and os.path.exists(image_path):
+                # Handle remote URLs - download first
+                if image_path.startswith('http'):
+                    print(f"   Downloading image from: {image_path}")
+                    temp_image_path = download_image(image_path)
+                    if temp_image_path:
+                        image_path = temp_image_path
+                    else:
+                        image_path = None
+                else:
+                    # Check if it's a local file path
+                    image_path = os.path.join(IMAGES_DIR, image_path)
+                    if not os.path.exists(image_path):
+                        print(f"   Image file not found: {image_path}")
+                        image_path = None
+                
+                # Upload the image if we have a valid path
+                if image_path and os.path.exists(image_path):
                     print(f"   Uploading image: {image_path}")
                     try:
                         media = api.media_upload(filename=image_path)
                         media_id = media.media_id
+                        print(f"   Image uploaded successfully, media_id: {media_id}")
                     except Exception as e:
-                        print(f"Image upload failed: {e}")
-                elif image_path.startswith('http'):
-                    print(f"   Skipping remote URL image: {image_path}")
-                else:
-                    print(f"Image file not found: {image_path}")
+                        print(f"   Image upload failed: {e}")
+                    finally:
+                        # Clean up temp file if it was downloaded
+                        if temp_image_path and os.path.exists(temp_image_path):
+                            os.unlink(temp_image_path)
 
             # Actually posting
             try:

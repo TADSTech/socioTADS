@@ -148,4 +148,40 @@ class GitHubService {
       throw Exception('Failed to create post: $e');
     }
   }
+
+  /// Trigger a GitHub Actions workflow
+  Future<void> triggerWorkflow(String workflowId, {Map<String, String>? inputs}) async {
+    try {
+      final url = Uri.https(
+        'api.github.com',
+        '/repos/$owner/$repo/actions/workflows/$workflowId/dispatches',
+      );
+
+      final Map<String, dynamic> body = {
+        'ref': 'main',
+      };
+
+      if (inputs != null && inputs.isNotEmpty) {
+        body['inputs'] = inputs;
+      }
+
+      final response = await http.post(
+        url,
+        headers: _headers,
+        body: jsonEncode(body),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      // 204 No Content is the success response for workflow dispatch
+      if (response.statusCode != 204) {
+        final errorBody = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+        final message = errorBody['message'] ?? 'Failed to trigger workflow (Status: ${response.statusCode})';
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Failed to trigger workflow: $e');
+    }
+  }
 }

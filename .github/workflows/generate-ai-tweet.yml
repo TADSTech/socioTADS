@@ -55,7 +55,7 @@ jobs:
           from api.ai import injectJsonData
           category = os.environ.get('CATEGORY', 'news')
           schedule_hours = int(os.environ.get('SCHEDULE_HOURS', '2') or '2')
-          char_limit = int(os.environ.get('CHAR_LIMIT', '200') or '200')
+          char_limit = int(os.environ.get('CHAR_LIMIT', '280') or '280')
           injectJsonData(category=category, schedule_hours=schedule_hours, char_limit=char_limit)
           "
 

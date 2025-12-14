@@ -1,87 +1,106 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GitHubService {
-  // ---------------- CONFIGURATION ----------------
-  final String owner = "YOUR_GITHUB_USER";
-  final String repo = "YOUR_REPO_NAME";
-  final String path = ".github/json/content.json"; // Path inside the repo
-  
-  // ⚠️ SECURITY: On Web, use a proxy. On Desktop, env vars are better.
-  final String token = "YOUR_PERSONAL_ACCESS_TOKEN"; 
-  // -----------------------------------------------
+  final String owner = "TADSTech";
+  final String repo = "socioTADS";
+  final String path = "json/content.json";
+  final String token = dotenv.env['GIT_PAT'] ?? "YOUR_PERSONAL_ACCESS_TOKEN";
 
-  // Helper to get headers
   Map<String, String> get _headers => {
-    'Authorization': 'Bearer $token',
+    'Authorization': 'token $token',
     'Accept': 'application/vnd.github.v3+json',
     'Content-Type': 'application/json',
   };
 
-  /// 1. READ the current schedule from GitHub
-  Future<Map<String, dynamic>> fetchCurrentFile() async {
-    final url = Uri.parse('https://api.github.com/repos/$owner/$repo/contents/$path');
-    final response = await http.get(url, headers: _headers);
-
-    if (response.statusCode == 404) {
-      // File doesn't exist yet, return empty defaults
-      return {'sha': null, 'content': []};
+  Future<List<Map<String, dynamic>>> fetchPosts() async {
+    try {
+      final fileData = await fetchCurrentFile();
+      final List<dynamic> content = fileData['content'] ?? [];
+      return List<Map<String, dynamic>>.from(content.map((post) => Map<String, dynamic>.from(post as Map)));
+    } catch (e) {
+      throw Exception('Failed to fetch posts: $e');
     }
-
-    if (response.statusCode != 200) {
-      throw Exception('GitHub API Error: ${response.statusCode} - ${response.body}');
-    }
-
-    final data = jsonDecode(response.body);
-    final String base64Content = data['content'].replaceAll('\n', ''); // Clean newlines
-    final String sha = data['sha'];
-
-    // Decode Base64 -> String -> JSON List
-    final String rawJson = utf8.decode(base64Decode(base64Content));
-    final List<dynamic> jsonList = jsonDecode(rawJson);
-
-    return {
-      'sha': sha,
-      'content': jsonList,
-    };
   }
 
-  /// 2. UPDATE & PUSH (Commit) the new schedule
-  Future<void> pushNewPost(Map<String, dynamic> newPost) async {
-    // A. Fetch current data to get the latest SHA (Optimistic Locking)
-    final fileData = await fetchCurrentFile();
-    final String? currentSha = fileData['sha'];
-    final List<dynamic> currentPosts = fileData['content'];
-
-    // B. Append your new post
-    currentPosts.add(newPost);
-
-    // C. Encode back to Base64
-    final String updatedJsonString = jsonEncode(currentPosts); // Pretty print optional
-    final String base64Content = base64Encode(utf8.encode(updatedJsonString));
-
-    // D. The "Commit" Request
-    final url = Uri.parse('https://api.github.com/repos/$owner/$repo/contents/$path');
-    final body = jsonEncode({
-      "message": "📱 App: Scheduled new post (ID: ${newPost['id']})", // Commit message
-      "content": base64Content,
-      "sha": currentSha // Required so you don't overwrite someone else's work
-    });
-
-    // If file didn't exist (sha is null), remove 'sha' field from body for initial create
-    final Map<String, dynamic> bodyMap = jsonDecode(body);
-    if (currentSha == null) bodyMap.remove('sha');
-
-    final response = await http.put(
-      url, 
-      headers: _headers, 
-      body: jsonEncode(bodyMap)
+  Future<Map<String, dynamic>> fetchCurrentFile() async {
+    final url = Uri.https(
+      'api.github.com',
+      '/repos/$owner/$repo/contents/.github/$path',
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print("✅ Successfully committed to GitHub!");
-    } else {
-      throw Exception("❌ Failed to push: ${response.body}");
+    try {
+      final response = await http.get(url, headers: _headers).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      if (response.statusCode == 404) {
+        return {'sha': null, 'content': []};
+      }
+
+      if (response.statusCode != 200) {
+        throw Exception('GitHub API Error: ${response.statusCode} - ${response.body}');
+      }
+
+      final data = jsonDecode(response.body);
+      final String base64Content = data['content'].replaceAll('\n', '');
+      final String sha = data['sha'];
+
+      final String rawJson = utf8.decode(base64Decode(base64Content));
+      final List<dynamic> jsonList = jsonDecode(rawJson);
+
+      return {
+        'sha': sha,
+        'content': jsonList,
+      };
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
+  Future<void> createPost(Map<String, dynamic> newPost) async {
+    try {
+      final fileData = await fetchCurrentFile();
+      final String? currentSha = fileData['sha'];
+      final List<dynamic> currentPosts = fileData['content'] ?? [];
+
+      currentPosts.add(newPost);
+
+      final String updatedJsonString = jsonEncode(currentPosts);
+      final String base64Content = base64Encode(utf8.encode(updatedJsonString));
+
+      final url = Uri.https(
+        'api.github.com',
+        '/repos/$owner/$repo/contents/.github/$path',
+      );
+
+      final Map<String, dynamic> bodyMap = {
+        "message": "App: Created new post (ID: ${newPost['id']})",
+        "content": base64Content,
+      };
+
+      if (currentSha != null) {
+        bodyMap['sha'] = currentSha;
+      }
+
+      final response = await http.put(
+        url,
+        headers: _headers,
+        body: jsonEncode(bodyMap),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Request timeout'),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final errorBody = jsonDecode(response.body);
+        final message = errorBody['message'] ?? 'Unknown error';
+        throw Exception('GitHub API Error: $message');
+      }
+    } catch (e) {
+      throw Exception('Failed to create post: $e');
     }
   }
 }

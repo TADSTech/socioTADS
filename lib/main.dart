@@ -18,7 +18,7 @@ void main() async {
     const initialSize = Size(1100, 750);
     win.minSize = const Size(800, 600);
     win.size = initialSize;
-    win.alignment = Alignment.center;
+    win.alignment = Alignment.centerLeft;
     win.title = "SocioTADS";
     win.show();
   });
@@ -69,12 +69,7 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        home: Column(
-          children: [
-            const CustomTitleBar(),
-            Expanded(child: const LandingPage()),
-          ],
-        ),
+        home: const LandingPage(),
         builder: (context, child) {
           return Column(
             children: [
@@ -100,29 +95,33 @@ class LandingPage extends StatelessWidget {
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Spacer(flex: 1),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: colors.border, width: 1),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - 100,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: colors.border, width: 1),
+                  ),
+                  child: Icon(
+                    CupertinoIcons.chart_bar_alt_fill,
+                    size: 40,
+                    color: colors.accent,
+                  ),
                 ),
-                child: Icon(
-                  CupertinoIcons.chart_bar_alt_fill,
-                  size: 40,
-                  color: colors.accent,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text('SocioTADS', style: styles.displayLarge),
-              const SizedBox(height: 12),
-              Text(
+                const SizedBox(height: 24),
+                Text('SocioTADS', style: styles.displayLarge),
+                const SizedBox(height: 12),
+                Text(
                 'Monitor & schedule your social posts\nwith a beautiful, minimal interface',
                 style: styles.bodyLarge.copyWith(color: colors.textSecondary),
                 textAlign: TextAlign.center,
@@ -193,7 +192,7 @@ class LandingPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const Spacer(flex: 1),
+              const SizedBox(height: 48),
               Text('AVAILABLE PLATFORMS', style: styles.caption),
               const SizedBox(height: 16),
               SizedBox(
@@ -259,7 +258,7 @@ class LandingPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const Spacer(flex: 1),
+              const SizedBox(height: 32),
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: () {
@@ -280,6 +279,7 @@ class LandingPage extends StatelessWidget {
               const SizedBox(height: 24),
             ],
           ),
+        ),
         ),
       ),
     );

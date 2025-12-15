@@ -40,7 +40,7 @@
         "time": "2025-12-14T23:16:59.103",
         "image": null,
         "hashtags": [],
-        "posted": false
+        "posted": true
     },
     {
         "id": "post_1765752841921",
@@ -48,6 +48,6 @@
         "time": "2025-12-15T00:54:01.921",
         "image": null,
         "hashtags": [],
-        "posted": false
+        "posted": true
     }
 ]

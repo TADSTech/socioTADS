@@ -1,9 +1,9 @@
 name: X Auto-Poster
 
 on:
-  # Check every hour.
+  # Check every 6 hour.
   schedule:
-    - cron: '0 * * * *' 
+    - cron: '6 * * * *' 
   workflow_dispatch:
 
 permissions:

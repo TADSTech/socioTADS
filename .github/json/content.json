@@ -75,5 +75,13 @@
     "image": null,
     "hashtags": [],
     "posted": false
+  },
+  {
+    "id": "post_1765839826945",
+    "text": "A semiconductor breakthrough merges classical & quantum computing on one chip, packing 25M quantum components. This could drastically accelerate AI, drug discovery, & materials science, shrinking t...",
+    "time": "2025-12-16T01:03:46.945",
+    "image": null,
+    "hashtags": [],
+    "posted": false
   }
 ]

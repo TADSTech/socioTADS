@@ -1,1 +1,111 @@
-[{"id":"u1","text":"This will be an interesting year for the future of AI","time":"2025-12-14T18:00:00","image":null,"posted":true},{"id":"post_1765723349733","text":"2026 has to be my year of Ws","time":"2025-12-14T16:59:00.000","image":"https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765723337284_TADSdisplay.png","hashtags":["TADS"],"posted":true},{"id":"post_1765728315921","text":"The grind never stops","time":"2025-12-15T18:04:00.000","image":"https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765728308514_codeotd.jpg","hashtags":["grind"],"posted":true},{"id":"post_1765745801089","text":"The true AI revolution isn't in standalone tools, but in AI becoming an \"invisible\" layer across all software engineering. This demands a renewed focus on ethical design and robust security, as the...","time":"2025-12-14T22:56:41.089","image":null,"hashtags":[],"posted":true},{"id":"post_1765747019103","text":"The proliferation of AI-generated content risks commoditizing genuine creativity. True value and lasting engagement will stem from authentic human insight, not infinite algorithmic noise. #AISoftwa...","time":"2025-12-14T23:16:59.103","image":null,"hashtags":[],"posted":true},{"id":"post_1765752841921","text":"GPT-5.2's coding performance sets a new record (55.6% SWE-Bench Pro) and offers deep tool integration. Developers gain a powerful AI agent for complex tasks, accelerating workflows and building adv...","time":"2025-12-15T00:54:01.921","image":null,"hashtags":[],"posted":true},{"id":"post_1765807353304","text":"The proliferation of AI-generated content is a significant trending discussion in both software engineering and AI on social media. Many conversations revolve around AI's increasing role in content...","time":"2025-12-15T16:02:33.304","image":null,"hashtags":[],"posted":true},{"id":"post_1765807799796","text":"Open AI GPT5.2 is a game changer ","time":"2025-12-15T16:08:57.002120","image":null,"hashtags":["#openai"],"posted":true},{"id":"post_1765839225655","text":"AI's pervasive integration into software engineering and social media is a dominant trend, driving innovations in content creation, personalization, and operational efficiency. In software developm...","time":"2025-12-16T00:53:45.655","image":null,"hashtags":[],"posted":true},{"id":"post_1765839826945","text":"A semiconductor breakthrough merges classical & quantum computing on one chip, packing 25M quantum components. This could drastically accelerate AI, drug discovery, & materials science, shrinking t...","time":"2025-12-16T01:03:46.945","image":null,"hashtags":[],"posted":true},{"id":"post_1765839844805","text":"damn it X shortening the length of my scheduled tweets.\nomoh","time":"2025-12-17T02:03:00.000","image":null,"hashtags":null,"posted":true},{"id":"post_1765979156452","text":"AI is redefining software engineering, making coders into orchestrators. The real frontier isn't AI writing more code, but human engineers developing the vision to guide it. #SoftwareEngineering #AI","time":"2025-12-17T15:45:56.452","image":null,"hashtags":[],"posted":false},{"id":"post_1765979165999","text":"Rustaeceans","time":"2025-12-18T15:45:00.000","image":null,"hashtags":null,"posted":false}]
+[
+    {
+        "id": "u1",
+        "text": "This will be an interesting year for the future of AI",
+        "time": "2025-12-14T18:00:00",
+        "image": null,
+        "posted": true
+    },
+    {
+        "id": "post_1765723349733",
+        "text": "2026 has to be my year of Ws",
+        "time": "2025-12-14T16:59:00.000",
+        "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765723337284_TADSdisplay.png",
+        "hashtags": [
+            "TADS"
+        ],
+        "posted": true
+    },
+    {
+        "id": "post_1765728315921",
+        "text": "The grind never stops",
+        "time": "2025-12-15T18:04:00.000",
+        "image": "https://raw.githubusercontent.com/TADSTech/socioTADS/main/.github/images/img_1765728308514_codeotd.jpg",
+        "hashtags": [
+            "grind"
+        ],
+        "posted": true
+    },
+    {
+        "id": "post_1765745801089",
+        "text": "The true AI revolution isn't in standalone tools, but in AI becoming an \"invisible\" layer across all software engineering. This demands a renewed focus on ethical design and robust security, as the...",
+        "time": "2025-12-14T22:56:41.089",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765747019103",
+        "text": "The proliferation of AI-generated content risks commoditizing genuine creativity. True value and lasting engagement will stem from authentic human insight, not infinite algorithmic noise. #AISoftwa...",
+        "time": "2025-12-14T23:16:59.103",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765752841921",
+        "text": "GPT-5.2's coding performance sets a new record (55.6% SWE-Bench Pro) and offers deep tool integration. Developers gain a powerful AI agent for complex tasks, accelerating workflows and building adv...",
+        "time": "2025-12-15T00:54:01.921",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765807353304",
+        "text": "The proliferation of AI-generated content is a significant trending discussion in both software engineering and AI on social media. Many conversations revolve around AI's increasing role in content...",
+        "time": "2025-12-15T16:02:33.304",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765807799796",
+        "text": "Open AI GPT5.2 is a game changer ",
+        "time": "2025-12-15T16:08:57.002120",
+        "image": null,
+        "hashtags": [
+            "#openai"
+        ],
+        "posted": true
+    },
+    {
+        "id": "post_1765839225655",
+        "text": "AI's pervasive integration into software engineering and social media is a dominant trend, driving innovations in content creation, personalization, and operational efficiency. In software developm...",
+        "time": "2025-12-16T00:53:45.655",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765839826945",
+        "text": "A semiconductor breakthrough merges classical & quantum computing on one chip, packing 25M quantum components. This could drastically accelerate AI, drug discovery, & materials science, shrinking t...",
+        "time": "2025-12-16T01:03:46.945",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765839844805",
+        "text": "damn it X shortening the length of my scheduled tweets.\nomoh",
+        "time": "2025-12-17T02:03:00.000",
+        "image": null,
+        "hashtags": null,
+        "posted": true
+    },
+    {
+        "id": "post_1765979156452",
+        "text": "AI is redefining software engineering, making coders into orchestrators. The real frontier isn't AI writing more code, but human engineers developing the vision to guide it. #SoftwareEngineering #AI",
+        "time": "2025-12-17T15:45:56.452",
+        "image": null,
+        "hashtags": [],
+        "posted": true
+    },
+    {
+        "id": "post_1765979165999",
+        "text": "Rustaeceans",
+        "time": "2025-12-18T15:45:00.000",
+        "image": null,
+        "hashtags": null,
+        "posted": false
+    }
+]
